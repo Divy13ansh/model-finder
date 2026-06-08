@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FastAPI Boilerplate</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Sketchfab Model Finder</h1>
+      <p>Search a model, then load it with the Sketchfab Viewer API.</p>
+
+      <div class="actions">
+        <input id="query-input" type="text" placeholder="Enter model query" />
+        <button id="find-btn" type="button">Find Model</button>
+      </div>
+
+      <div class="viewer-shell">
+        <iframe
+          id="api-frame"
+          title="Sketchfab Viewer"
+          src=""
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          xr-spatial-tracking
+          execution-while-out-of-viewport
+          execution-while-not-rendered
+          web-share
+          allowfullscreen
+          mozallowfullscreen="true"
+          webkitallowfullscreen="true"
+        ></iframe>
+      </div>
+
+      <pre id="output">Ready.</pre>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
