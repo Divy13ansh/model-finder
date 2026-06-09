@@ -1,6 +1,5 @@
 import requests
-from app.services.rank_models import rank_models
-import json
+from app.services.agent_model_rank import agent_model_rank
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -10,20 +9,48 @@ def find_model(query: str):
     try:
         response = requests.get(
             SEARCH_URL,
-            params={"q": query, "sort_by": "-relevance", "type": "models"},
+            params={
+                "q": query,
+                "sort_by": "-relevance",
+                "type": "models"
+            },
             timeout=10,
         )
+
         response.raise_for_status()
+
         data = response.json()
-        if "results" in data and len(data["results"]) > 0:
-            models = data["results"]
-            with open("models.json", "w") as f:
-                json.dump(models, f, indent=4)
-            model_info = rank_models(models)
+
+        results = data.get("results", [])
+
+        if not results:
             return {
-                "name": model_info.get("name"),
-                "uid": model_info.get("uid"),
+                "message": "No models found."
             }
-        return {"message": "No models found for the given query."}
+
+        candidates = results[:5]
+
+        ranked = agent_model_rank(
+            query=query,
+            models=candidates
+        )
+
+        if not ranked:
+            return {
+                "message": "No suitable model found."
+            }
+
+        best_model, best_score = ranked
+
+        return {
+            "name": best_model.get("name"),
+            "uid": best_model.get("uid"),
+            "embedUrl": best_model.get("embedUrl"),
+            "viewerUrl": best_model.get("viewerUrl"),
+            "score": best_score,
+        }
+
     except Exception as e:
-        return {"error": str(e)}
+        return {
+            "error": str(e)
+        }

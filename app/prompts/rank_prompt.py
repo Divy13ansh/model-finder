@@ -1,6 +1,8 @@
-from prompts.base_prompt import BASE_PROMPT
+from app.prompts.base_prompt import BASE_PROMPT
 
-RANK_PROMPT = BASE_PROMPT + """
+def build_rank_prompt(query: str):
+    return f"""
+{BASE_PROMPT}
 
 The user is searching for:
 
@@ -11,12 +13,18 @@ You will be shown a thumbnail for a candidate model.
 
 Evaluate how well this candidate matches the query.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON.
 
-{
-    "score": <integer from 0 to 100>,
-    "reason": "<one short sentence>"
-}
+Do not include markdown.
+Do not include explanations.
+Do not wrap the JSON in code fences.
+
+Example:
+
+{{
+    "reason": "Highly realistic anatomical heart model.",
+    "score": 87
+}}
 
 Scoring guide:
 

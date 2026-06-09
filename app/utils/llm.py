@@ -1,54 +1,55 @@
-import requests
+import base64
+import mimetypes
 import os
+
 from dotenv import load_dotenv
+from openai import OpenAI
+
 
 load_dotenv()
 
-url = os.getenv("LLM_API_URL")
-MODEL = os.getenv("MODEL")
 
-def query_llm(prompt: str, image_urls: list[str] | None = None):
-    # Placeholder for LLM query logic
-    # In a real implementation, this would call an LLM API like OpenAI's GPT-4
+ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.4-mini")
 
-    content = []
+client = OpenAI(base_url=ENDPOINT, api_key=API_KEY)
 
-    content.append({
-        "type": "text",
-        "text": prompt
-    })
 
-    if image_urls:
-        for url in image_urls:
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": url
+def _image_to_data_uri(image_path: str) -> str:
+    mime_type, _ = mimetypes.guess_type(image_path)
+    mime_type = mime_type or "image/jpeg"
+
+    with open(image_path, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("utf-8")
+
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def query_llm(prompt: str, image_paths: list[str] | None = None):
+    content = [{"type": "text", "text": prompt}]
+
+    if image_paths:
+        for image_path in image_paths:
+            content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": _image_to_data_uri(image_path)},
                 }
-            })
+            )
 
-    payload = {
-        "model": MODEL,
-        "messages": [{ "role": "user", "content": content }],
-        "chat_template_kwargs": { "enable_thinking": True },
-        "max_tokens": 16384,
-        "stream": False,
-        "temperature": 0.2,
-        "top_p": 0.95
-    }
+    response = client.chat.completions.create(
+        model=DEPLOYMENT,
+        temperature=0.2,
+        messages=[
+            {
+                "role": "user",
+                "content": content,
+            }
+        ],
+    )
 
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json"
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-
-    response.raise_for_status()
-
-    data = response.json()
-    # For demonstration, we'll return a mock response
     return {
-        "model": MODEL,
-        "response": data["choices"][0]["message"]["content"]
+        "model": DEPLOYMENT,
+        "response": response.choices[0].message.content or "",
     }
