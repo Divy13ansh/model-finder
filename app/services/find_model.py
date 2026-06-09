@@ -1,9 +1,11 @@
 import requests
 from app.services.rank_models import rank_models
 import json
-SEARCH_URL = "https://sketchfab.com/i/search"
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-
+SEARCH_URL = os.getenv("SKETCHFAB_API_URL")
 def find_model(query: str):
     try:
         response = requests.get(
